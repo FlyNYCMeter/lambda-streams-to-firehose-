@@ -115,7 +115,9 @@ function init() {
  */
 exports.addNewlineTransformer = function(data, callback) {
 	// emitting a new buffer as ascii text with newline
-	callback(null, new Buffer(JSON.stringify(data) + "\n"));
+	// Stringify only if it is not a string
+	data = typeof data === 'string' ? data : JSON.stringify(data);
+	callback(null, new Buffer(data + "\n"));
 };
 
 /**
@@ -356,8 +358,9 @@ exports.handler = function(event, context) {
 
 				// transform the user records
 				async.map(userRecords, function(userRecord, userRecordCallback) {
-					var dataItem = serviceName === KINESIS_SERVICE_NAME ? new Buffer(userRecord.data, 'base64').toString('ascii') : userRecord;
-
+					// No need to convert kinesis stream data received.
+					//var dataItem = serviceName === KINESIS_SERVICE_NAME ? new Buffer(userRecord.data, 'base64').toString('ascii') : userRecord;
+					var dataItem = serviceName === KINESIS_SERVICE_NAME ? userRecord.data : userRecord;
 					// only transform the data portion of a kinesis record, or
 					// the entire dynamo record
 					transformer(dataItem, function(err, transformed) {
